@@ -37,14 +37,21 @@ func main() {
 
 	// create a room
 	r := newRoom()
-	http.Handle("/", &templateHandler{filename: "skychat.html"})
+
+	// run auth, if succeeds : run chat
+	http.Handle("/chat", MustAuth(&templateHandler{filename: "skychat.html"}))
+
+	http.Handle("/login", &templateHandler{filename: "login.html"})
+
+	http.HandleFunc("/auth/", loginHandler)
+
 	http.Handle("/room", r)
 
 	// start the room ( in separate go routine )
 	go r.run()
 
 	// start the webserver ( main routine )
-	log.Println("Starting web server at : ", *addr)
+	log.Println("Starting web server at", *addr)
 	if err := http.ListenAndServe(*addr, nil); err != nil {
 		log.Fatalln("ListenAndServe:", err)
 	}
