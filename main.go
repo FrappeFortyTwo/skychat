@@ -29,12 +29,15 @@ func (t *templateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // start of the program
 func main() {
 
-	// serve "/" root
-
-	// pass address of newly created object of type templateHandler
+	// create a room
+	r := newRoom()
 	http.Handle("/", &templateHandler{filename: "skychat.html"})
+	http.Handle("/room", r)
 
-	// start serving ...
+	// start the room ( in separate go routine )
+	go r.run()
+
+	// start the webserver ( main routine )
 	if err := http.ListenAndServe(":8080", nil); err != nil {
 		log.Fatalln("ListenAndServe:", err)
 	}
