@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"html/template"
 	"log"
 	"net/http"
@@ -23,11 +24,16 @@ func (t *templateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		t.templ = template.Must(template.ParseFiles(filepath.Join("templates", t.filename)))
 	})
 
-	t.templ.Execute(w, nil)
+	// pass request data ( which includes the host address )
+	t.templ.Execute(w, r)
 }
 
 // start of the program
 func main() {
+
+	// parse command-line arguments ( default : 8080 )
+	var addr = flag.String("addr", ":8080", "Address for the app")
+	flag.Parse()
 
 	// create a room
 	r := newRoom()
@@ -38,7 +44,8 @@ func main() {
 	go r.run()
 
 	// start the webserver ( main routine )
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	log.Println("Starting web server at : ", *addr)
+	if err := http.ListenAndServe(*addr, nil); err != nil {
 		log.Fatalln("ListenAndServe:", err)
 	}
 

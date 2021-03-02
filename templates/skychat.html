@@ -6,10 +6,68 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title> Sky Chat </title>
+
+    <!-- include jquery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 </head>
 
+<style>
+    input {
+        display: block;
+    }
+
+    ul {
+        list-style: none;
+    }
+</style>
+
 <body>
-    Welcome to Sky Chat !
+
+    <h1> Sky Chat </h1>
+
+    <ul id="messages"></ul>
+    <form id="chatbox">
+        <textarea></textarea>
+        <input id="button" type="submit" value="Send" />
+    </form>
+
+    <script>
+        $(function () {
+            var socket = null;
+            var msgBox = $("#chatbox textarea");
+            var messages = $("#messages");
+            $("#chatbox").submit(function () {
+                if (!msgBox.val()) return false;
+                if (!socket) {
+                    alert("Error: There is no socket connection.");
+                    return false;
+                }
+
+                // submit button call
+                socket.send(msgBox.val());
+                msgBox.val("");
+                return false;
+            });
+            if (!window["WebSocket"]) {
+                alert("Error: Your browser does not support web sockets.")
+            } else {
+
+                // open socket ( inject Host value of http.Request )
+                socket = new WebSocket("ws://{{.Host}}/room");
+
+                // onclose ( event handler )
+                socket.onclose = function () {
+                    alert("Connection has been closed.");
+                }
+
+                // onmessage ( event handler )
+                socket.onmessage = function (e) {
+                    messages.append($("<li>").text(e.data));
+                }
+            }
+        });
+    </script>
+
 </body>
 
 </html>
