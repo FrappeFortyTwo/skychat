@@ -1,59 +1,29 @@
 package main
 
 import (
-	"flag"
-	"html/template"
 	"log"
-	"net/http"
-	"path/filepath"
-	"sync"
+	"net"
 )
 
-// template for html
-type templateHandler struct {
-	once     sync.Once
-	filename string
-	templ    *template.Template
-}
-
-// handle http requests
-func (t *templateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-
-	// compile template once ( lazy initialisation )
-	t.once.Do(func() {
-		t.templ = template.Must(template.ParseFiles(filepath.Join("templates", t.filename)))
-	})
-
-	// pass request data ( which includes the host address )
-	t.templ.Execute(w, r)
-}
-
-// start of the program
 func main() {
+	s := newServer()
+	go s.run()
 
-	// parse command-line arguments ( default : 8080 )
-	var addr = flag.String("addr", ":8080", "Address for the app")
-	flag.Parse()
-
-	// create a room
-	r := newRoom()
-
-	// run auth, if succeeds : run chat
-	http.Handle("/chat", MustAuth(&templateHandler{filename: "skychat.html"}))
-
-	http.Handle("/login", &templateHandler{filename: "login.html"})
-
-	http.HandleFunc("/auth/", loginHandler)
-
-	http.Handle("/room", r)
-
-	// start the room ( in separate go routine )
-	go r.run()
-
-	// start the webserver ( main routine )
-	log.Println("Starting web server at", *addr)
-	if err := http.ListenAndServe(*addr, nil); err != nil {
-		log.Fatalln("ListenAndServe:", err)
+	listener, err := net.Listen("tcp", ":8888")
+	if err != nil {
+		log.Fatalf("unable to start server: %s", err.Error())
 	}
 
+	defer listener.Close()
+	log.Printf("server started on :8888")
+
+	for {
+		conn, err := listener.Accept()
+		if err != nil {
+			log.Printf("failed to accept connection: %s", err.Error())
+			continue
+		}
+
+		go s.newClient(conn)
+	}
 }

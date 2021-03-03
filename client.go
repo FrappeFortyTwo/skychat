@@ -1,50 +1,72 @@
 package main
 
-import "github.com/gorilla/websocket"
+import (
+	"bufio"
+	"fmt"
+	"net"
+	"strings"
+)
 
-// structure for a user ( client )
 type client struct {
-
-	// websocket for the client
-	socket *websocket.Conn
-
-	// buffered channel on which received messages are queued to be forwarded to user ( via socket )
-	send chan []byte
-
-	// refers to the room the client is chatting in ( used to forward messages to everyone else in the room)
-	room *room
+	conn     net.Conn
+	nick     string
+	commands chan<- command
+	contact  string
 }
 
-// read from socket
-func (c *client) read() {
-	defer c.socket.Close()
-
-	// continually..
+func (c *client) readInput() {
 	for {
-
-		// read messages from socket
-		_, msg, err := c.socket.ReadMessage()
+		msg, err := bufio.NewReader(c.conn).ReadString('\n')
 		if err != nil {
-			// if reading fails, socket is closed
 			return
 		}
 
-		// send received messages to forward channel
-		c.room.forward <- msg
+		msg = strings.Trim(msg, "\r\n")
+
+		args := strings.Split(msg, " ")
+		cmd := strings.TrimSpace(args[0])
+
+		switch cmd {
+		case "/nick":
+			c.commands <- command{
+				id:     CMD_NICK,
+				client: c,
+				args:   args,
+			}
+		case "/join":
+			c.commands <- command{
+				id:     CMD_JOIN,
+				client: c,
+				args:   args,
+			}
+		case "/rooms":
+			c.commands <- command{
+				id:     CMD_ROOMS,
+				client: c,
+			}
+		case "/msg":
+			c.commands <- command{
+				id:     CMD_MSG,
+				client: c,
+				args:   args,
+			}
+		case "/quit":
+			c.commands <- command{
+				id:     CMD_QUIT,
+				client: c,
+			}
+		default:
+			c.err(fmt.Errorf("unknown command: %s", cmd))
+		}
 	}
 }
 
-// write to socket
-func (c *client) write() {
-	defer c.socket.Close()
+func (c *client) err(err error) {
+	c.conn.Write([]byte("err: " + err.Error() + "\n"))
+}
 
-	// write received messages to socket
-	for msg := range c.send {
-		err := c.socket.WriteMessage(websocket.TextMessage, msg)
+func (c *client) msg(x *client, msg string) {
 
-		if err != nil {
-			// if writing fails, socket is closed
-			return
-		}
-	}
+	x.conn.Write([]byte("> " + msg + "\n"))
+	//c.conn.Write([]byte("> " + msg + "\n"))
 }
