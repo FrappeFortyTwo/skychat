@@ -7,109 +7,167 @@ import (
 	"strings"
 )
 
+// structure of server
 type server struct {
 
-	// rooms will be known by client name
-	rooms    map[string]*client
+	// map of clients connected to the server :
+	// client name (key) & client (value)
+	contacts map[string]*client
+
+	// channel on which server receives commands from clients
 	commands chan command
 }
 
+// function to instantiate new server
 func newServer() *server {
+
 	return &server{
-		rooms:    make(map[string]*client),
+		contacts: make(map[string]*client),
 		commands: make(chan command),
 	}
 }
 
+// function to run server
 func (s *server) run() {
+
+	log.Printf("running server...")
+
+	// loop through incoming commands..
 	for cmd := range s.commands {
+
+		// based on the command id, execute desired functions
 		switch cmd.id {
-		case CMD_NICK:
-			s.nick(cmd.client, cmd.args[1])
-		case CMD_JOIN:
+		case cmdName:
+			// update client name to input
+			s.name(cmd.client, cmd.args[1])
+		case cmdJoin:
+			// update client contact to input
 			s.join(cmd.client, cmd.args[1])
-		case CMD_ROOMS:
+		case cmdList:
+			// return list of users (clients) connected to the server
 			s.listRooms(cmd.client)
-		case CMD_MSG:
+		case cmdMsg:
+			// send input to client contact
 			s.msg(cmd.client, cmd.args)
-		case CMD_QUIT:
+		case cmdQuit:
+			// quit chat system
 			s.quit(cmd.client)
 		}
 	}
 }
 
+// function to instantiate new client :
+// called when a new client joins the server
 func (s *server) newClient(conn net.Conn) {
-	log.Printf("new client has joined: %s", conn.RemoteAddr().String())
 
+	// instantiate client
 	c := &client{
 		conn:     conn,
-		nick:     "anonymous",
+		name:     "anonymous",
 		commands: s.commands,
 		contact:  "",
 	}
 
+	log.Printf("new client has joined : %s", conn.RemoteAddr().String())
+
+	// start reading for input ( this is a blocking call on a separte go routine )
 	c.readInput()
 }
 
-func (s *server) nick(c *client, nick string) {
+// function to assign an identifer (name) to a newly created client
+func (s *server) name(c *client, name string) {
 
-	c.nick = nick
-	s.rooms[nick] = c
+	// assign name to client
+	c.name = name
 
-	// msg to self
-	c.msg(c, fmt.Sprintf("all right, I will call you %s", nick))
+	// update server guest list i.e currently connected users (clients)
+	s.contacts[name] = c
+
+	// give user feedback message
+	c.msg(c, fmt.Sprintf("you will be known as %s", name))
 }
 
-func (s *server) join(c *client, roomName string) {
+// function to assign contact ( who a client is currently talkig to ) :
+func (s *server) join(c *client, contactName string) {
 
-	// roomName means the key for clients on server
+	// check if a client by the given name exists on the server contacts list
+	for k := range s.contacts {
 
-	c.contact = roomName
-	// r, ok := s.rooms[roomName]
-	// if !ok {
-	// 	r = &room{
-	// 		name:    roomName,
-	// 		members: make(map[net.Addr]*client),
-	// 	}
-	// 	s.rooms[roomName] = r
-	// }
-	// r.members[c.conn.RemoteAddr()] = c
+		// if such a client exists...
+		if contactName == k {
 
-	// s.quitCurrentRoom(c)
-	// c.room = r
+			// update client contact ( this contact is who messages will be sent to )
+			c.contact = contactName
 
-	// r.broadcast(c, fmt.Sprintf("%s joined the room", c.nick))
+			// pass feedback
+			c.msg(c, fmt.Sprintf("You are now talking to :%s", c.contact))
+			break
+		} else {
 
-	c.msg(c, fmt.Sprintf("You are now talking to :%s", roomName))
-
+			// otherwise, pass feedback
+			c.msg(c, fmt.Sprintf("No such user exists. check available users again."))
+		}
+	}
 }
 
+// function to display list of connected users :
+// these clients are who you (a client) can join and then msg
 func (s *server) listRooms(c *client) {
 
-	var rooms []string
-	for name := range s.rooms {
-		rooms = append(rooms, name)
+	var contacts []string
+
+	// loop through available users
+	for name := range s.contacts {
+
+		// fetch all users except current client
+		if name != c.name {
+			contacts = append(contacts, name)
+		}
+
 	}
 
-	c.msg(c, fmt.Sprintf("available rooms: %s", strings.Join(rooms, ", ")))
+	// pass message
+	c.msg(c, fmt.Sprintf("available rooms: %s", strings.Join(contacts, ", ")))
 }
 
+// function to pass a message to specified user (client)
 func (s *server) msg(c *client, args []string) {
-	msg := strings.Join(args[1:len(args)], " ")
 
-	// self message to other
-	c.msg(s.rooms[c.contact], c.nick+": "+msg+"from server")
+	// check if a user for given name exists on the server contacts map
+	_, ok := s.contacts[c.name]
+
+	// is so...
+	if ok && c.contact != "" {
+
+		log.Printf("attempting to send message")
+
+		// join the entire mesage
+		msg := strings.Join(args[1:], " ")
+
+		// send the message
+		c.msg(s.contacts[c.contact], c.name+" : "+msg)
+
+	} else {
+		// otherwise, prompt user to join to a user
+		c.msg(c, "no one hears you. connect to a contact to initiate chat service. ")
+	}
+
+	println("from here")
 }
 
+// function to exit from chat
 func (s *server) quit(c *client) {
+
 	log.Printf("client has left the chat: %s", c.conn.RemoteAddr().String())
 
-	s.quitCurrentRoom(c)
+	// remove user from server contact list
+	_, ok := s.contacts[c.name]
+	if ok {
+		delete(s.contacts, c.name)
+	}
 
-	c.msg(c, "sad to see you go =(")
+	// pass message
+	c.msg(c, "skychat will miss you...")
+	// close client connection
 	c.conn.Close()
-}
-
-func (s *server) quitCurrentRoom(c *client) {
-	c.msg(c, "quitting current room..")
 }

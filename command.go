@@ -1,15 +1,19 @@
 package main
 
+// custom type based on int ( for clarity )
 type commandID int
 
 const (
-	CMD_NICK commandID = iota
-	CMD_JOIN
-	CMD_ROOMS
-	CMD_MSG
-	CMD_QUIT
+
+	// using iota to generate ever increasing numbers
+	cmdName commandID = iota
+	cmdJoin
+	cmdList
+	cmdMsg
+	cmdQuit
 )
 
+// structure for a command
 type command struct {
 	id     commandID
 	client *client
