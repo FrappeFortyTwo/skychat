@@ -52,6 +52,9 @@ func (s *server) run() {
 		case cmdQuit:
 			// quit chat system
 			s.quit(cmd.client)
+		case cmdHelp:
+			// return command list
+			s.help(cmd.client)
 		}
 	}
 }
@@ -127,7 +130,7 @@ func (s *server) listRooms(c *client) {
 	}
 
 	// pass message
-	c.msg(c, fmt.Sprintf("available rooms: %s", strings.Join(contacts, ", ")))
+	c.msg(c, fmt.Sprintf("available users: %s", strings.Join(contacts, ", ")))
 }
 
 // function to pass a message to specified user (client)
@@ -149,10 +152,9 @@ func (s *server) msg(c *client, args []string) {
 
 	} else {
 		// otherwise, prompt user to join to a user
-		c.msg(c, "no one hears you. connect to a contact to initiate chat service. ")
+		c.msg(c, "no one hears you. follow below steps to get started :\n\n* use '/list' command to check, available users.\n* use '/join' command to select who you want to chat to.\n* use '/msg'  command to send message to selected user.\n")
 	}
 
-	println("from here")
 }
 
 // function to exit from chat
@@ -170,4 +172,12 @@ func (s *server) quit(c *client) {
 	c.msg(c, "skychat will miss you...")
 	// close client connection
 	c.conn.Close()
+}
+
+// function to return command list
+func (s *server) help(c *client) {
+
+	// pass message
+	c.msg(c, "Skychat : Chat Platform\n\n Usage : /<command> [arguments]\n\n* name : Specify your name.\n* list : List connected users.\n* join : Specify message recepient.\n* msg  : Send message to recepient.\n* quit : Exit Skychat.\n* help : List help commands.\n")
+
 }

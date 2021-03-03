@@ -11,6 +11,7 @@ const (
 	cmdList
 	cmdMsg
 	cmdQuit
+	cmdHelp
 )
 
 // structure for a command

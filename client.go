@@ -81,9 +81,16 @@ func (c *client) readInput() {
 				id:     cmdQuit,
 				client: c,
 			}
+		case "/help":
+			// return command list
+			c.commands <- command{
+				id:     cmdHelp,
+				client: c,
+			}
 			// for any other command
 		default:
 			c.err(fmt.Errorf("unknown command: %s", cmd))
+			c.msg(c, "* use '/help' to   command to send message to selected user")
 		}
 	}
 }
@@ -95,7 +102,5 @@ func (c *client) err(err error) {
 
 // writes a message to specified client
 func (c *client) msg(x *client, msg string) {
-
-	// check is such a client exists
 	x.conn.Write([]byte("> " + msg + "\n"))
 }
