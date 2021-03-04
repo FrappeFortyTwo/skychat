@@ -1,6 +1,8 @@
 package main
 
 import (
+	"crypto/rand"
+	"crypto/rsa"
 	"fmt"
 	"log"
 	"net"
@@ -63,12 +65,20 @@ func (s *server) run() {
 // called when a new client joins the server
 func (s *server) newClient(conn net.Conn) {
 
+	// create private-public keys
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
 	// instantiate client
 	c := &client{
 		conn:     conn,
 		name:     "anonymous",
 		commands: s.commands,
 		contact:  "",
+		private:  privateKey,
+		public:   privateKey.PublicKey,
 	}
 
 	log.Printf("new client has joined : %s", conn.RemoteAddr().String())
@@ -93,23 +103,22 @@ func (s *server) name(c *client, name string) {
 // function to assign contact ( who a client is currently talkig to ) :
 func (s *server) join(c *client, contactName string) {
 
-	// check if a client by the given name exists on the server contacts list
-	for k := range s.contacts {
+	// check if a user for given name exists on the server contacts map
+	_, ok := s.contacts[contactName]
 
-		// if such a client exists...
-		if contactName == k {
+	// if so...
+	if ok && contactName != "" {
 
-			// update client contact ( this contact is who messages will be sent to )
-			c.contact = contactName
+		// update client contact ( this contact is who messages will be sent to )
+		c.contact = contactName
+		// pass feedback
+		c.msg(c, fmt.Sprintf("You are now talking to :%s", c.contact))
 
-			// pass feedback
-			c.msg(c, fmt.Sprintf("You are now talking to :%s", c.contact))
-			break
-		} else {
+	} else {
 
-			// otherwise, pass feedback
-			c.msg(c, fmt.Sprintf("No such user exists. check available users again."))
-		}
+		// otherwise, pass feedback
+		c.msg(c, fmt.Sprintf("No such user exists. check available users again."))
+
 	}
 }
 
@@ -142,15 +151,23 @@ func (s *server) msg(c *client, args []string) {
 	// is so...
 	if ok && c.contact != "" {
 
-		log.Printf("attempting to send message")
+		log.Printf("attempting to send message to %s", c.contact)
 
 		// join the entire mesage
 		msg := strings.Join(args[1:], " ")
+		msg = c.name + " : " + msg
+
+		// fetch public key of recepient of message
+		publicKey := s.contacts[c.contact].public
+
+		// encrypt data
+		eMsg := encrypt(msg, publicKey)
 
 		// send the message
-		c.msg(s.contacts[c.contact], c.name+" : "+msg)
+		c.msg(s.contacts[c.contact], eMsg)
 
 	} else {
+
 		// otherwise, prompt user to join to a user
 		c.msg(c, "no one hears you. follow below steps to get started :\n\n* use '/list' command to check, available users.\n* use '/join' command to select who you want to chat to.\n* use '/msg'  command to send message to selected user.\n")
 	}

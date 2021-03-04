@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"crypto/rsa"
 	"fmt"
 	"net"
 	"strings"
@@ -23,6 +24,12 @@ type client struct {
 
 	// commands to facilitate chat system
 	commands chan<- command
+
+	// private
+	private *rsa.PrivateKey
+
+	// public
+	public rsa.PublicKey
 }
 
 // function to read input
@@ -102,5 +109,18 @@ func (c *client) err(err error) {
 
 // writes a message to specified client
 func (c *client) msg(x *client, msg string) {
-	x.conn.Write([]byte("> " + msg + "\n"))
+
+	// if contacting other client
+	if c.private != x.private {
+
+		dMsg := decrypt(msg, *x.private)
+
+		// write message to client
+		x.conn.Write([]byte("> " + dMsg + "\n"))
+
+	} else {
+		// write message to client
+		x.conn.Write([]byte("> " + msg + "\n"))
+	}
+
 }
