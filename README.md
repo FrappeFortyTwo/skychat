@@ -23,7 +23,7 @@ The application is madeup of a single binary so to get it running :
 
 That's all !
 
-See [releases](github.com/FrappeFortyTwo/skychat/releases) for available packages.
+See [releases](https://github.com/FrappeFortyTwo/skychat/releases) for available packages.
 
 ## Building the project
 
