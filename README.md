@@ -4,13 +4,7 @@ Skychat is a basic encrypted messaging system, where clients connect to server v
 
 ## Skychat in action : [screencap]
 
-![Avens screencap](/README/demo.gif)
-
-## Skychat with decrypt disabled : [screencap] 
-
-Here I have disabled decrypt commands to show, that messages received are encrypted.
-
-![Avens screencap](/README/decrypt.gif)
+Todo : Add screen cast link
 
 ## Features
 
