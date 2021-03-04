@@ -4,7 +4,7 @@ Skychat is a basic encrypted messaging system, where clients connect to server v
 
 ## Skychat in action : ( Click to view video demo )
 
-[![youtube demo](https://github.com/FrappeFortyTwo/skychat/README/thumb.png)](https://www.youtube.com/watch?v=30-eSvU4Rfk)
+[![youtube demo](/README/thumb.png)](https://www.youtube.com/watch?v=30-eSvU4Rfk)
 
 
 ## Features
