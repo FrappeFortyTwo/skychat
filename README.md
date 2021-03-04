@@ -31,9 +31,9 @@ See [releases](github.com/FrappeFortyTwo/skychat/releases) for available package
 2. Clone or fork this repository.
 3. Open the directory with this repo's contents.
 4. Run the command : `go build` ( this should create a new file within the present working directory ).
-5. Finally, you can run the executable : `./skychat`. This should start the server at :8888 (default).
+5. Finally, you can run the executable : `./skychat`. This should start the server at :8080 (default).
 6. connect to this server using telnet : enter following command into a commandline while server is running.
-7. `telnet localhost 8888`
+7. `telnet localhost 8080`
 
 ## Sky Chat Commands :
 
