@@ -117,7 +117,7 @@ func (s *server) join(c *client, contactName string) {
 	} else {
 
 		// otherwise, pass feedback
-		c.msg(c, fmt.Sprintf("No such user exists. check available users again."))
+		c.msg(c, "No such user exists. check available users again.")
 
 	}
 }

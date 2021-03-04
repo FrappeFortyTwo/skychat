@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"crypto/rsa"
 	"fmt"
+	"log"
 	"net"
 	"strings"
 )
@@ -104,7 +105,11 @@ func (c *client) readInput() {
 
 // writes an error message current client
 func (c *client) err(err error) {
-	c.conn.Write([]byte("err: " + err.Error() + "\n"))
+
+	_, e := c.conn.Write([]byte("err: " + err.Error() + "\n"))
+	if e != nil {
+		log.Fatalln("unable to write to connection", e)
+	}
 }
 
 // writes a message to specified client
@@ -116,11 +121,17 @@ func (c *client) msg(x *client, msg string) {
 		dMsg := decrypt(msg, *x.private)
 
 		// write message to client
-		x.conn.Write([]byte("> " + dMsg + "\n"))
+		_, e := x.conn.Write([]byte("> " + dMsg + "\n"))
+		if e != nil {
+			log.Fatalln("unable to write over client connection")
+		}
 
 	} else {
 		// write message to client
-		x.conn.Write([]byte("> " + msg + "\n"))
+		_, e := x.conn.Write([]byte("> " + msg + "\n"))
+		if e != nil {
+			log.Fatalln("unable to write over client connection")
+		}
 	}
 
 }
