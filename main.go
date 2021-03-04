@@ -1,12 +1,17 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"net"
 )
 
 // entry point fo the program
 func main() {
+
+	// parse command-line arguments ( default : 8080 )
+	var addr = flag.String("addr", ":8080", "Address for the app")
+	flag.Parse()
 
 	// instantiate a server
 	s := newServer()
@@ -16,12 +21,12 @@ func main() {
 	go s.run()
 
 	// start listening...
-	listener, err := net.Listen("tcp", ":8888")
+	listener, err := net.Listen("tcp", *addr)
 
 	if err != nil {
 		log.Fatalf("unable to start server: %s", err.Error())
 	} else {
-		log.Printf("listening to port : 8888")
+		log.Printf("listening to port : %s", *addr)
 	}
 
 	defer listener.Close()
