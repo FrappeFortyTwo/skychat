@@ -2,11 +2,10 @@
 
 Skychat is a basic encrypted messaging system, where clients connect to server via tcp.
 
-## Skychat in action : [screencap]
+## Skychat in action : ( Click to view video demo )
 
-[![youtube demo](https://img.youtube.com/vi/30-eSvU4Rfk/0.jpg)](https://www.youtube.com/watch?v=30-eSvU4Rfk)
+[![youtube demo](https://github.com/FrappeFortyTwo/skychat/README/thumb.png)](https://www.youtube.com/watch?v=30-eSvU4Rfk)
 
-Todo : Add screen cast link
 
 ## Features
 
@@ -48,4 +47,4 @@ Usage : /`<command>` [arguments]
 * `help` : List help commands.
 
 ## How long it took ?
-It took close to 9 hours to finish the task completely including researching, coding and documenting.
+It took close to 10 hours to finish the task completely including researching, coding, documenting and everything else.
