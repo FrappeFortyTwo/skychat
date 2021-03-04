@@ -47,7 +47,7 @@ func (s *server) run() {
 			s.join(cmd.client, cmd.args[1])
 		case cmdList:
 			// return list of users (clients) connected to the server
-			s.listRooms(cmd.client)
+			s.list(cmd.client)
 		case cmdMsg:
 			// send input to client contact
 			s.msg(cmd.client, cmd.args)
@@ -124,7 +124,7 @@ func (s *server) join(c *client, contactName string) {
 
 // function to display list of connected users :
 // these clients are who you (a client) can join and then msg
-func (s *server) listRooms(c *client) {
+func (s *server) list(c *client) {
 
 	var contacts []string
 
@@ -146,7 +146,7 @@ func (s *server) listRooms(c *client) {
 func (s *server) msg(c *client, args []string) {
 
 	// check if a user for given name exists on the server contacts map
-	_, ok := s.contacts[c.name]
+	_, ok := s.contacts[c.contact]
 
 	// is so...
 	if ok && c.contact != "" {
