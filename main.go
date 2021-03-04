@@ -40,10 +40,3 @@ func main() {
 		log.Printf("added new client : %s", conn.RemoteAddr().String())
 	}
 }
-
-// quick error check function
-func checkErr(e error, m string) {
-	if e != nil {
-		log.Fatalln(m)
-	}
-}

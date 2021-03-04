@@ -65,7 +65,7 @@ func (s *server) run() {
 // called when a new client joins the server
 func (s *server) newClient(conn net.Conn) {
 
-	// create private-public keys
+	// generate RSA keys
 	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
 		log.Fatalln(err)
@@ -151,8 +151,6 @@ func (s *server) msg(c *client, args []string) {
 	// is so...
 	if ok && c.contact != "" {
 
-		log.Printf("attempting to send message to %s", c.contact)
-
 		// join the entire mesage
 		msg := strings.Join(args[1:], " ")
 		msg = c.name + " : " + msg
@@ -162,9 +160,11 @@ func (s *server) msg(c *client, args []string) {
 
 		// encrypt data
 		eMsg := encrypt(msg, publicKey)
+		log.Printf("encrypting messages...")
 
 		// send the message
 		c.msg(s.contacts[c.contact], eMsg)
+		log.Printf("sending message to %s", c.contact)
 
 	} else {
 
